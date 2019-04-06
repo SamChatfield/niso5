@@ -5,18 +5,21 @@ import sys
 import numpy as np
 
 import arg_parser
+import util
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARNING)
 
 
-def _sample(prob, repetitions):
-    return np.random.choice(len(prob), size=repetitions, replace=True, p=prob)
-
-
 def question1(prob, repetitions):
-    res = _sample(prob, repetitions)
-    logging.debug('For prob=%s, rep=%s, Got: %s, type: %s', prob, repetitions, res, type(res))
-    return res
+    results = util.sample(prob, repetitions)
+    logging.debug('For prob=%s, rep=%s, Got: %s, type: %s', prob, repetitions, results, type(results))
+    return results
+
+
+def question2(strategy, state, crowded, repetitions):
+    results = strategy.simulate_step(state, crowded, repetitions)
+    logging.debug('For strategy=%s, state=%s, crowded=%s, rep=%s\nGot: %s, type: %s', strategy, state, crowded, repetitions, results, type(results))
+    return results
 
 
 def main():
@@ -27,12 +30,14 @@ def main():
 
     if args.question == 1:
         logging.debug('question 1:')
-        # print(question1(args.prob, args.repetitions))
-        res = question1(args.prob, args.repetitions)
-        for r in res:
+        results = question1(args.prob, args.repetitions)
+        for r in results:
             print(r)
     elif args.question == 2:
         logging.debug('question 2')
+        results = question2(args.strategy, args.state, args.crowded, args.repetitions)
+        for r in results:
+            print(f'{r[0]}\t{r[1]}')
     elif args.question == 3:
         logging.debug('question 3')
     else:
