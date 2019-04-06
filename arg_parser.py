@@ -1,8 +1,10 @@
 import argparse
 
+import numpy as np
+
 
 def _prob(prob_str):
-    return tuple(map(float, prob_str.split(' ')))
+    return np.array(list(map(float, prob_str.split(' '))))
 
 
 def parse():

@@ -2,18 +2,20 @@ import logging
 import random
 import sys
 
+import numpy as np
+
 import arg_parser
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARNING)
 
 
 def _sample(prob, repetitions):
-    return random.choices(range(len(prob)), weights=prob, k=repetitions)
+    return np.random.choice(len(prob), size=repetitions, replace=True, p=prob)
 
 
 def question1(prob, repetitions):
     res = _sample(prob, repetitions)
-    logging.debug('For prob=%s, rep=%s, Got: %s', prob, repetitions, res)
+    logging.debug('For prob=%s, rep=%s, Got: %s, type: %s', prob, repetitions, res, type(res))
     return res
 
 
@@ -21,8 +23,7 @@ def main():
     args = arg_parser.parse()
 
     if args.debug:
-        logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.DEBUG)
 
     if args.question == 1:
         logging.debug('question 1:')

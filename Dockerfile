@@ -8,8 +8,8 @@ RUN pip3 install setuptools wheel
 WORKDIR /usr/src/app
 
 # Install requirements
-# ADD requirements.txt ./
-# RUN pip3 install --no-cache-dir -r requirements.txt
+ADD requirements.txt ./
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Add files and set entrypoint args
 ADD *.py ./
