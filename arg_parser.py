@@ -15,7 +15,8 @@ def _strategy(strategy_str):
 
 def parse():
     parser = argparse.ArgumentParser(
-        description='NISO Lab 5'
+        description='NISO Lab 5',
+        conflict_handler='resolve'
     )
     parser.add_argument(
         '-question',
@@ -42,6 +43,23 @@ def parse():
         '-crowded',
         type=int
     ),
+    parser.add_argument(
+        '-lambda',
+        type=int,
+        dest='lambda_'
+    )
+    parser.add_argument(
+        '-h',
+        type=int
+    )
+    parser.add_argument(
+        '-weeks',
+        type=int
+    )
+    parser.add_argument(
+        '-max_t',
+        type=int
+    )
     parser.add_argument(
         '-debug',
         action='store_true'

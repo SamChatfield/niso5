@@ -5,6 +5,7 @@ import sys
 import numpy as np
 
 import arg_parser
+import ea
 import util
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.WARNING)
@@ -40,6 +41,10 @@ def main():
             print(f'{r[0]}\t{r[1]}')
     elif args.question == 3:
         logging.debug('question 3')
+        # ea_obj = ea.EA(args.lambda_, args.h, args.weeks, args.max_t)
+        ea_obj = ea.EA(args.lambda_, args.h, args.weeks)
+        ea_obj.run(args.max_t)
+        print('None')
     else:
         logging.error('Invalid question number supplied')
         sys.exit(1)

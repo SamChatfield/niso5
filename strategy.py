@@ -6,7 +6,31 @@ import util
 
 
 class Strategy:
-    def __init__(self, strategy_str):
+    def __init__(self, strategy):
+        if type(strategy) == str:
+            logging.debug('Strategy from str')
+            (h, p, a, b) = Strategy._parse_str(strategy)
+        elif (
+            type(strategy) == tuple and
+            len(strategy) == 4 and
+            tuple(map(type, strategy)) == (int, np.ndarray, np.ndarray, np.ndarray)
+        ):
+            logging.debug('Strategy from tuple')
+            (h, p, a, b) = strategy
+        else:
+            raise ValueError('Invalid strategy format, must be str or (h, p, a, b) tuple')
+
+        self._h = h
+        self._p = p
+        self._a = a
+        self._b = b
+        logging.warning('H:\n%s\n', self._h)
+        logging.warning('P:\n%s\n', self._p)
+        logging.warning('A:\n%s\n', self._a)
+        logging.warning('B:\n%s\n', self._b)
+
+    @staticmethod
+    def _parse_str(strategy_str):
         logging.warning('Strat Str: %s', strategy_str)
         strategy_parts = strategy_str.split()
         logging.warning('Strat Parts: %s', strategy_parts)
@@ -36,17 +60,9 @@ class Strategy:
             b_i = list(map(float, strategy_parts[b_i_start : b_i_stop]))
             b.append(b_i)
 
-        self._h = h
-        self._p = np.array(p)
-        self._a = np.array(a)
-        self._b = np.array(b)
+        return (h, np.array(p), np.array(a), np.array(b))
 
-        logging.warning('H:\n%s\n', self._h)
-        logging.warning('P:\n%s\n', self._p)
-        logging.warning('A:\n%s\n', self._a)
-        logging.warning('B:\n%s\n', self._b)
-
-    def prob_for_state(self, state, crowded):
+    def _prob_for_state(self, state, crowded):
         # Bar crowded
         if crowded == 1:
             return self._a[state]
@@ -57,19 +73,22 @@ class Strategy:
         else:
             raise TypeError(f'Invalid argument crowded={crowded}')
 
-    def decision_for_state(self, state):
-        return np.random.uniform() < self._p[state]
+    def _decision_for_state(self, state):
+        r = np.random.uniform()
+        p = self._p[state]
+        logging.debug('Decision: go to bar if r (%s) < p (%s)', r, p)
+        return r < p
 
     def simulate_step(self, state, crowded, repetitions=1):
         # Find the probability distribution
-        state_prob = self.prob_for_state(state, crowded)
+        state_prob = self._prob_for_state(state, crowded)
         logging.debug('prob for state=%s, crowded=%s:\n%s\n', state, crowded, state_prob)
 
         # Sample a state for
         states = util.sample(state_prob, repetitions)
-        logging.debug('states:\n%s\n', states)
+        logging.debug('States:\n%s\n', states)
 
-        decisions = np.fromiter((self.decision_for_state(s) for s in states), dtype=int)
-        logging.debug('decisions:\n%s\n', decisions)
+        decisions = np.fromiter((self._decision_for_state(s) for s in states), dtype=int)
+        logging.debug('Decisions:\n%s\n', decisions)
 
         return np.column_stack((decisions, states))
