@@ -8,7 +8,7 @@ class Individual:
     def __init__(self, strategy_obj):
         assert isinstance(strategy_obj, strategy.Strategy)
         self._strategy = strategy_obj
-        self._fitness = None
+        self._genes = self._compute_genes()
 
     @property
     def h(self):
@@ -18,6 +18,9 @@ class Individual:
     def genes(self):
         # The list of genes is the concatenation of P, A and B
         # Each element in p is a gene, and each row in A and B are genes
+        return self._genes
+
+    def _compute_genes(self):
         p = self._strategy.p.copy()
         p_genes = np.reshape(p, (p.size, 1))
         a_genes = self._strategy.a.copy()

@@ -40,7 +40,6 @@ def _uniform(p1, p2):
     c2_genes = []
 
     for (c, p1g, p2g) in zip(coin_flips, p1_genes, p2_genes):
-        logging.debug('Coin flip %s, p1g %s, p2g %s', c, p1g, p2g)
         if c < 0.5:
             # c1 gene <- p1, c2 gene <- p2
             c1_genes.append(p1g)

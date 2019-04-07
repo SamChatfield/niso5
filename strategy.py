@@ -92,13 +92,11 @@ class Strategy:
     def _decision_for_state(self, state):
         r = np.random.uniform()
         p = self._p[state]
-        logging.debug('Decision: go to bar if r (%s) < p (%s)', r, p)
         return r < p
 
     def simulate_step(self, state, crowded, repetitions=1):
         # Find the probability distribution
         state_prob = self._prob_for_state(state, crowded)
-        logging.debug('prob for state=%s, crowded=%s:\n%s\n', state, crowded, state_prob)
 
         # Sample a state for
         states = util.sample(state_prob, repetitions)
