@@ -1,7 +1,8 @@
 import logging
 
+import population
 
-def truncation(num_parents, population, payoffs):
-    sorted_population = population[payoffs.argsort()[::-1]]
-    logging.debug('Population:\n%s\nSorted to:\n%s\nBy payoffs:\n%s\n', population, sorted_population, payoffs)
-    return sorted_population[:num_parents].copy()
+
+def truncation(count, pop, payoffs):
+    sorted_population = population.sorted_by_payoffs(pop, payoffs)
+    return sorted_population[:count].copy()

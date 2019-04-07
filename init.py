@@ -23,6 +23,7 @@ def _random_strategy(h):
 
     return strategy.Strategy((h, p, a, b))
 
+
 def initialise(lambda_, h):
     logging.debug('Initialise population with lambda=%s, h=%s', lambda_, h)
 

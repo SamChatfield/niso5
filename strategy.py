@@ -24,16 +24,16 @@ class Strategy:
         self._p = p
         self._a = a
         self._b = b
-        logging.warning('H:\n%s\n', self._h)
-        logging.warning('P:\n%s\n', self._p)
-        logging.warning('A:\n%s\n', self._a)
-        logging.warning('B:\n%s\n', self._b)
+        logging.debug('H:\n%s\n', self._h)
+        logging.debug('P:\n%s\n', self._p)
+        logging.debug('A:\n%s\n', self._a)
+        logging.debug('B:\n%s\n', self._b)
 
     @staticmethod
     def _parse_str(strategy_str):
-        logging.warning('Strat Str: %s', strategy_str)
+        logging.debug('Strat Str: %s', strategy_str)
         strategy_parts = strategy_str.split()
-        logging.warning('Strat Parts: %s', strategy_parts)
+        logging.debug('Strat Parts: %s', strategy_parts)
 
         # H - number of states
         h = int(strategy_parts[0])
@@ -61,6 +61,22 @@ class Strategy:
             b.append(b_i)
 
         return (h, np.array(p), np.array(a), np.array(b))
+
+    @property
+    def h(self):
+        return self._h
+
+    @property
+    def p(self):
+        return self._p
+
+    @property
+    def a(self):
+        return self._a
+
+    @property
+    def b(self):
+        return self._b
 
     def _prob_for_state(self, state, crowded):
         # Bar crowded

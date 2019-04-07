@@ -9,6 +9,7 @@ def simulate(gen, population, weeks):
     crowded = 0
     states = np.zeros(population.size, dtype=int)
     payoffs = np.zeros(population.size, dtype=int)
+    attendances = np.empty(weeks, dtype=int)
 
     for w in range(weeks):
         logging.debug('WEEK %s\n', w)
@@ -24,6 +25,7 @@ def simulate(gen, population, weeks):
 
         # Is the bar crowded?
         d_sum = new_decisions.sum()
+        attendances[w] = d_sum
         new_crowded = int(d_sum >= 0.6 * population.size)
         logging.debug('New crowded: %s', new_crowded)
 
@@ -46,8 +48,11 @@ def simulate(gen, population, weeks):
         crowded = new_crowded
         states = new_states
 
-    return payoffs
+    mean_attendance = np.mean(attendances)
+    return (payoffs, mean_attendance)
 
 
-def sort_by_fitness(population):
-    pass
+def sorted_by_payoffs(population, payoffs):
+    sorted_population = population[(-payoffs).argsort(kind='stable')].copy()
+    logging.debug('Population:\n%s\nSorted to:\n%s\nBy payoffs:\n%s\n', population, sorted_population, payoffs)
+    return sorted_population
