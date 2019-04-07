@@ -31,16 +31,20 @@ def simulate(gen, population, weeks):
         for (idx, ind) in enumerate(population):
             d = new_decisions[idx]
             if (
-                (d == 1 and crowded == 0) or
-                (d == 0 and crowded == 1)
+                (d == 1 and new_crowded == 0) or
+                (d == 0 and new_crowded == 1)
             ):
-                logging.debug('Ind %s, d=%s, c=%s => payoff += 1', idx, d, crowded)
+                logging.debug('Ind %s, d=%s, c=%s => payoff += 1', idx, d, new_crowded)
                 payoffs[idx] += 1
             else:
-                logging.debug('Ind %s, d=%s, c=%s => no payoff', idx, d, crowded)
+                logging.debug('Ind %s, d=%s, c=%s => no payoff', idx, d, new_crowded)
         logging.debug('Payoffs:\n%s\n', payoffs)
         new_decisions_str = '\t'.join([str(d) for d in new_decisions])
         print(f'{w}\t{gen}\t{d_sum}\t{new_crowded}\t{new_decisions_str}')
+
+        # Update crowded flag and states array for next week
+        crowded = new_crowded
+        states = new_states
 
     return payoffs
 
