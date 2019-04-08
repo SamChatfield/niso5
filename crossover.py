@@ -7,21 +7,6 @@ import individual
 import strategy
 
 
-def _ind_from_genes(genes):
-    num_genes = len(genes)
-    assert num_genes % 3 == 0
-    # H
-    h = int(num_genes / 3)
-    # P
-    p = np.array(genes[:h]).reshape(h)
-    # A
-    a = np.array(genes[h : 2*h])
-    # B
-    b = np.array(genes[2*h : 3*h])
-
-    return individual.Individual(strategy.Strategy((h, p, a, b)))
-
-
 def _uniform(p1, p2):
     p1_genes = p1.genes
     logging.debug('Parent1 genes:\n%s\n', p1_genes)
@@ -30,30 +15,30 @@ def _uniform(p1, p2):
 
     assert len(p1_genes) == len(p2_genes)
     num_genes = len(p1_genes)
-    assert num_genes % 3 == 0
-    h = int(num_genes / 3)
 
-    coin_flips = np.random.uniform(size=num_genes)
+    coin_flips = np.random.binomial(1, 0.5, size=num_genes)
     logging.debug('Crossover coin flips:\n%s\n', coin_flips)
 
     c1_genes = []
     c2_genes = []
 
     for (c, p1g, p2g) in zip(coin_flips, p1_genes, p2_genes):
-        if c < 0.5:
+        if c == 0:
             # c1 gene <- p1, c2 gene <- p2
             c1_genes.append(p1g)
             c2_genes.append(p2g)
-        else:
+        elif c == 1:
             # c1 gene <- p2, c2 gene <- p1
             c1_genes.append(p2g)
             c2_genes.append(p1g)
+        else:
+            raise Exception(f'Invalid coin flip value {c} not in [0, 1]')
 
     logging.debug('Child1 genes:\n%s\n', c1_genes)
     logging.debug('Child2 genes:\n%s\n', c2_genes)
 
-    c1 = _ind_from_genes(c1_genes)
-    c2 = _ind_from_genes(c2_genes)
+    c1 = individual.from_genes(c1_genes)
+    c2 = individual.from_genes(c2_genes)
 
     return (c1, c2)
 

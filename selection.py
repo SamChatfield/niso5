@@ -3,6 +3,5 @@ import logging
 import population
 
 
-def truncation(count, pop, payoffs):
-    sorted_population = population.sorted_by_payoffs(pop, payoffs)
-    return sorted_population[:count].copy()
+def truncation(count, sorted_pop):
+    return sorted_pop[:count].copy()

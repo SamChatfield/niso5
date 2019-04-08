@@ -31,3 +31,18 @@ class Individual:
         logging.debug('Simulate step of ind where state=%s, crowded=%s', state, crowded)
         (decision, state) = self._strategy.simulate_step(state, crowded).flatten()
         return (decision, state)
+
+
+def from_genes(genes):
+    num_genes = len(genes)
+    assert num_genes % 3 == 0
+    # H
+    h = int(num_genes / 3)
+    # P
+    p = np.array(genes[:h]).reshape(h)
+    # A
+    a = np.array(genes[h : 2*h])
+    # B
+    b = np.array(genes[2*h : 3*h])
+
+    return Individual(strategy.Strategy((h, p, a, b)))
