@@ -35,11 +35,11 @@ class EA:
         gen = 0
         logging.debug('GEN %s', gen)
         (payoffs, mean_attendance) = population.simulate(gen, self._population, self._weeks)
-        logging.info('Payoffs for gen %s:\n%s', gen, payoffs)
         logging.info('Attendance for gen %s:\n%.4f\n', gen, (mean_attendance / self._lambda))
 
         # Sort the initial population by payoffs
-        self._population = population.sorted_by_payoffs(self._population, payoffs)
+        (self._population, sorted_payoffs) = population.sorted_by_payoffs(self._population, payoffs)
+        logging.info('Payoffs for gen %s:\n%s', gen, sorted_payoffs)
 
         for gen in range(1, generations):
             logging.debug('GEN %s', gen)
@@ -58,11 +58,11 @@ class EA:
 
             # Compute payoffs of new population
             (payoffs, mean_attendance) = population.simulate(gen, new_pop, self._weeks)
-            logging.info('Payoffs for gen %s:\n%s', gen, payoffs)
             logging.info('Attendance for gen %s:\n%.4f\n', gen, (mean_attendance / self._lambda))
 
             # Sort the new population by payoffs
-            sorted_pop = population.sorted_by_payoffs(new_pop, payoffs)
+            (sorted_pop, sorted_payoffs) = population.sorted_by_payoffs(new_pop, payoffs)
+            logging.info('Payoffs for gen %s:\n%s', gen, sorted_payoffs)
 
             self._population = sorted_pop
             assert self._population.size == self._lambda

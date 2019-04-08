@@ -53,6 +53,8 @@ def simulate(gen, population, weeks):
 
 
 def sorted_by_payoffs(population, payoffs):
-    sorted_population = population[(-payoffs).argsort(kind='stable')].copy()
+    permutation = (-payoffs).argsort(kind='stable')
+    sorted_population = population[permutation].copy()
+    sorted_payoffs = payoffs[permutation].copy()
     logging.debug('Population:\n%s\nSorted to:\n%s\nBy payoffs:\n%s\n', population, sorted_population, payoffs)
-    return sorted_population
+    return (sorted_population, sorted_payoffs)
