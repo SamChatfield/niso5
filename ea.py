@@ -19,11 +19,8 @@ class EA:
         self._weeks = weeks
 
         self._mutation_chance = mutation_chance
-        if mutation_rate is None:
-            # Default mutation rate to 1 / num_genes, where num_genes is 3h
-            self._mutation_rate = 1 / (3 * h)
-        else:
-            self._mutation_rate = mutation_rate
+        # Default mutation rate of 1 / num_genes (where num_genes = 3h)
+        self._mutation_rate = 1 / (3 * h) if mutation_rate is None else mutation_rate
 
         self._num_parents = max(2, math.floor(lambda_ * 0.25))
 
