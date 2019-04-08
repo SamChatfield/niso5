@@ -27,7 +27,7 @@ def main():
     args = arg_parser.parse()
 
     if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.INFO)
 
     if args.question == 1:
         logging.debug('question 1:')

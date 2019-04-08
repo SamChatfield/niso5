@@ -1,0 +1,275 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper]{geometry}
+\usepackage{float}
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+
+\title{
+  El Farol Bar Problem\\
+  \large Advanced Aspects of Nature-Inspired Search and Optimisation
+}
+\author{
+  Sam Chatfield\\
+  1559986
+}
+\date{8 April, 2019}
+
+\begin{document}
+
+\maketitle
+
+\section{Algorithm}
+
+The pseudo-code representing my Genetic Algorithm is given by Algorithm \ref{alg:ga}.
+The functions INITIALISE, SIMULATE, CROSSOVER, and MUTATE are secondary functions and genetic operators that I have chosen to use in my implementation and are given by Algorithms \ref{alg:init}, \ref{alg:sim}, \ref{alg:cross} and \ref{alg:mut} respectively.
+The functions sortByPayoffs and replaceWorst are trivial functions which sort the population by the array of payoffs, and replace the worst individuals in the population with the newly generated children respectively.
+The genotype of my individuals is independent element of the strategy.
+This means that each element of the P vector, and each row of the A and B matrices are genes.
+The reason that we take the rows of A and B as genes rather than the elements is that each unit of these matrices are the rows, not the elements because they define the probability distribution of transitioning from the current state to each other state.
+Hence, there are $3h$ genes in each individual.
+The individual in the population with the highest payoff is not considered in the MUTATE genetic operator so that some level of elitism within the algorithm is maintained, hence the $[1..end]$ selector on the population.
+The parameters of my algorithm are as follows:
+\begin{itemize}
+  \item $lambda$ - the population size
+  \item $h$ - the number of states in any given strategy, also $3h$ is the number of genes in an individual
+  \item $weeks$ - the number of weeks for which to simulate the bar to determine the payoff of each individual
+  \item $maxT$ - the number of generations to run the algorithm for
+  \item $parentProportion$ - the proportion of the population to select as parents for each generation
+  \item $mutationChance$ - the probability that any given individual will be mutated
+  \item $mutationRate$ - the probability that any given gene within an individual will be mutated, this has a default value of $\frac{1}{3h}$ where $3h$ is the number of genes
+\end{itemize}
+
+The INITIALISE function simply randomly generates the P vector, and A and B matrices for each strategy and turn these into a new individual.
+The P vector is simply an array of $h$ random values from the uniform distribution, this is represented by uniform(h).
+The A and B matrices are generated as matrices with $h$ rows where each row is flat-Dirichlet-distributed vector of length $h$, this is represented by flatDirichlet(h).
+I used the flat Dirichlet distribution ($Dir(\alpha)$, where $\alpha = [1, 1, ...]$) with $length(\alpha) = h$ because it gives us the behaviour that each row in A and B is uniformly distributed and sums to 1.0.
+This is important because we will sample from these rows to determine which state to move to in the next week of simulation, hence the sum of the row should not exceed 1.
+
+The SIMULATE function runs a simulation of the El Farol Bar for the current population over the defined number of weeks.
+The bar starts not crowded and with all individuals in state 0 as defined by the lab sheet.
+Then, for each week, we compute the decision of whether to go to the bar or not, and the next state for every individual.
+Depending on how many individuals attended the bar, it is either now crowded or not crowded.
+We then add 1 to the payoffs of all individuals who stayed at home if it was crowded, or attended the bar if it was not crowded.
+The mean attendance over all the weeks is also recorded because it will be our measure of how good the generation is.
+
+The CROSSOVER operator simply performs a uniform crossover on each gene in each pair of parents.
+It is a simple coin flip for each gene which decides whether the gene will be swapped between the two parents or not.
+This process produces two new child individuals rather than modifying the parent individuals as expected.
+
+The MUTATION operator is a simple gene replacement with some probability of occurring for each individual, and another probability of each gene in that individual's genotype being mutated.
+If both probabilities are met then a new random gene is generated according to either the uniform distribution or Dirichlet distribution in the same way as in the INITIALISE function.
+This operator does modify the individual rather than creating a new one.
+Thus, to keep some elitism within my algorithm I chose to run this on all individuals except the top one as sorted by payoff from the last simulation.
+
+\begin{algorithm}[H]
+  \caption{Genetic Algorithm}
+  \label{alg:ga}
+  \DontPrintSemicolon
+  \KwIn{lambda, h, weeks, maxT, parentProportion, mutationChance, mutationRate}
+  \KwOut{mean attendance for the last generation}
+  \Begin {
+    numParents $\gets$ lambda $\times$ parentProportion
+
+    gen $\gets$ 0\;
+    population $\gets$ INITIALISE(lambda, h)\;
+    (payoffs, meanAttendance) $\gets$ SIMULATE(population, weeks)\;
+    population $\gets$ sortByPayoffs(population, payoffs)\;\
+    gen $\gets$ gen + 1\;\
+
+    \While {$gen < maxT$} {
+      parents $\gets$ population[0, numParents-1]\;
+      children $\gets$ CROSSOVER(parents)\;
+      population $\gets$ replaceWorst(population, children)\;\
+
+      population[1..end] $\gets$ MUTATE(population[1..end], mutationChance, mutationRate)\;\
+
+      (payoffs, meanAttendance) $\gets$ SIMULATE(population, weeks)\;
+      population $\gets$ sortByPayoffs(population, payoffs)\;\
+
+      gen $\gets$ gen + 1\;
+    }\
+
+    \Return {$meanAttendance$}\;
+  }
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \caption{INITIALISE (Random)}
+  \label{alg:init}
+  \DontPrintSemicolon
+  \KwIn{lambda, h}
+  \KwOut{population}
+  \Begin {
+    population $\gets \emptyset$\;\
+
+    \For {$d \gets 0$ \KwTo $lambda-1$} {
+      P $\gets$ uniform(h)\;
+      A $\gets$ flatDirichlet(h)\;
+      B $\gets$ flatDirichlet(h)\;\
+
+      population $\gets$ population $\cup$ newIndividual(h, P, A, B)\;
+    }\
+
+    \Return {$population$}
+  }
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \caption{SIMULATE}
+  \label{alg:sim}
+  \DontPrintSemicolon
+  \KwIn{population, weeks}
+  \KwOut{payoffs, meanAttendance}
+  \Begin {
+    popSize $\gets$ size(population)\;
+    crowded $\gets$ 0\;
+    states $\gets$ zeroVector(popSize)\;
+    payoffs $\gets$ zeroVector(popSize)\;
+    attendances $\gets \emptyset$\;\
+
+    \For {$w \gets 0$ \KwTo $weeks-1$} {
+      (newDecisions, newStates) $\gets$ strategyStep(states, crowded)\;
+      attended = sum(newDecisions)\;
+      attendances $\gets$ attendances $\cup$ attended\;\
+
+      newCrowded $\gets$ attended $>=$ 0.6 $\times$ popSize\;
+      incrementPayoffs(payoffs, population, newDecisions, newCrowded)\;\
+
+      crowded $\gets$ newCrowded\;
+      states $\gets$ newStates\;
+    }\
+
+    \Return {(payoffs, mean(attendances))}
+  }
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \caption{CROSSOVER (Uniform)}
+  \label{alg:cross}
+  \DontPrintSemicolon
+  \KwIn{parents}
+  \KwOut{children}
+  \Begin {
+    children $\gets \emptyset$\;\
+
+    \For {(p1, p2) $\in$ parents} {
+      p1genes $\gets$ genes(p1)\;
+      p2genes $\gets$ genes(p2)\;
+      c1genes $\gets \emptyset$\;
+      c2genes $\gets \emptyset$\;\
+
+      \For {(p1gene, p2gene) $\in$ (p1genes, p2genes)} {
+        \If {rand([0, 1]) = 0} {
+          c1genes $\gets$ c1genes $\cup$ p1gene\;
+          c2genes $\gets$ c2genes $\cup$ p2gene\;
+        }
+        \Else {
+          c1genes $\gets$ c1genes $\cup$ p2gene\;
+          c2genes $\gets$ c2genes $\cup$ p1gene\;
+        }
+      }\
+
+      c1 $\gets$ newIndividual(c1genes)\;
+      c2 $\gets$ newIndividual(c2genes)\;\
+
+      children $\gets$ children $\cup$ \{c1, c2\}\;
+    }\
+
+    \Return {$children$}
+  }
+\end{algorithm}
+
+\begin{algorithm}[H]
+  \caption{MUTATE (Gene Replacement)}
+  \label{alg:mut}
+  \DontPrintSemicolon
+  \KwIn{individuals, mutationChance, mutationRate}
+  \KwOut{newIndividuals}
+  \Begin {
+    newIndividuals $\gets \emptyset$\;\
+
+    \For {individual $\in$ individuals} {
+      \If {rand(0.0, 1.0) $<$ mutationChance} {
+        indGenes $\gets$ genes(individual)\;
+        newIndGenes $\gets \emptyset$\;\
+
+        \For {indGene $\in$ indGenes} {
+          \If {rand(0.0, 1.0) $<$ mutationRate} {
+            newIndGenes $\gets$ newIndGenes $\cup$ randomGene()\;
+          }
+          \Else {
+            newIndGenes $\gets$ newIndGenes $\cup$ indGene\;
+          }
+        }\
+
+        newIndividuals $\gets$ newIndividuals $\cup$ newIndividual(newIndGenes)
+      }
+      \Else {
+        newIndividuals $\gets$ newIndividuals $\cup$ ind\;
+      }
+    }\
+
+    \Return {newIndividuals}
+  }
+\end{algorithm}
+
+\section{Parameters}
+
+For each experiment I ran 100 independent runs of my co-evolutionary algorithm with fixed parameter values $h = 4$, $weeks = 5$ and $maxT = 10$.
+In each experiment, I fixed the values of the parameters not being experimented on to sensible values which I used during the development and testing of my algorithm.
+These were $lambda = 250$, $mutationChance = 0.5$ and $mutationRate = \frac{1}{3h}$.
+
+\subsection{Lambda}
+
+The first parameter I performed experiments on was the population size (lambda).
+The results can be seen in Figure \ref{fig:lambda}.
+It is fairly clear that greater population sizes lead to better convergence to 60\% capacity of the bar.
+For the smaller population sizes the median values for the mean attendances are acceptable but there are issues with the range of values having some solutions which are greatly underfilling the bar or greatly overcrowding the bar.
+When the population size was at its greatest (250), we see the range of values is quite small and the median is very close to 60\% capacity while not overcrowding it; this is the ideal situation.
+There might be more of a tradeoff in population size if we were evaluating the algorithm over a fixed time budget rather than a fixed number of generations because the larger populations would take longer to simulate and thus less generations would be completed.
+
+\subsection{Mutation Chance}
+
+The second parameter I tested was the mutation chance.
+This defines the probability that any given mutation candidate will actually be mutated at all.
+The results are shown in Figure \ref{fig:mutation_chance}.
+Out of the values tested, 0.5 seems to be the most favourable because its median is less than, but very close to, 60\% attendance and the range of attendances is smaller, so more of the runs produced good solutions when compared to the other mutation chance values tested.
+The other values tested seemed to have runs where the attendance at the end either greatly underfilled or overcrowded the bar.
+Mutation chances less than 0.25 seemed to generally overcrowd the bar as seen by their interquartile ranges extending to attendances greater than 60\%, while mutation chances greater than 0.25 seemed to generally underfill the bar as seen from its range extending to much lower attendance percentages.
+
+\subsection{Mutation Rate}
+
+The third parameter I experimented on was the mutation range.
+This gives the probability that any given gene in the genotype of an individual will be replaced with a new randomly generated gene.
+The results are shown in Figure \ref{fig:mutation_rate}.
+The values tested were None, 0.25 and 0.5.
+The value None is a quirk of my Python implementation where the None value is the default which denotes a mutation rate of $\frac{1}{3h}$ where $3h$ is the number of genes in the genotype of an individual.
+Out of the values tested this value of $\frac{1}{3h}$ seemed to be the most favourable.
+It produced the best mean attendances over the 100 runs and was also not as susceptible to outliers and large ranges as the values of 0.25 and 0.5.
+This was a somewhat expected result because this choice of mutation rate is somewhat equivalent to the mutation rate of $\frac{1}{numBits}$ in binary representation genetic algorithms, but instead of working with binary bits we are working with individual genes in the genotype.
+I would expect that this mutation rate would work well for any value of h.
+
+\begin{figure}[H]
+  \includegraphics[width=\textwidth]{lambda}
+  \centering
+  \caption{Population size (lambda) experiments where $lambda \in \{50, 100, 150, 200, 250\}$}
+  \label{fig:lambda}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[width=\textwidth]{mutation_chance}
+  \centering
+  \caption{Mutation chance experiments where $mutationChance \in \{0.1, 0.25, 0.5, 1.0\}$}
+  \label{fig:mutation_chance}
+\end{figure}
+
+\begin{figure}[h]
+  \includegraphics[width=\textwidth]{mutation_rate}
+  \centering
+  \caption{Mutation rate experiments where $mutationRate \in \{None=\frac{1}{3h}, 0.25, 0.5\}$}
+  \label{fig:mutation_rate}
+\end{figure}
+
+\end{document}

@@ -67,4 +67,4 @@ class EA:
             self._population = sorted_pop
             assert self._population.size == self._lambda
 
-        return mean_attendance
+        return mean_attendance / self._lambda

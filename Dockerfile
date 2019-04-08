@@ -13,5 +13,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Add files and set entrypoint args
 ADD *.py ./
-CMD ["-username", "sxc678", "-submission", "python3 main.py"]
-# CMD ["-username", "sxc678", "-submission", "python3 main.py", "-verbose"]
+CMD ["-username", "sxc678", "-submission", "python3 -O main.py"]
+# CMD ["-username", "sxc678", "-submission", "python3 -O main.py", "-verbose"]
+# CMD ["-username", "sxc678", "-submission", "python3 main.py -debug", "-verbose"]
+# CMD ["-username", "sxc678", "-submission", "python3 main.py -debug", "-questions", "3", "-verbose"]
